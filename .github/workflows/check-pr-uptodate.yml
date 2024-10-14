@@ -1,0 +1,24 @@
+# This workflow will build a Swift project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
+
+name: check-pr-uptodate
+
+on:
+  push:
+    branches: [ "dev", "main", "prod" ]
+  pull_request:
+    branches: [ "dev", "main", "prod" ]
+
+jobs:
+  Check-pr-uptodate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "The repository has been cloned to the runner"
+      - name: Check if branch is uptodate
+        run: |
+          if ! git merge-base --is-ancestor origin/main ${{ github.event.pull_request.head.sha }};
+          then echo "This branch is not up to date with main";
+          exit 1; fi
+      - run: echo "Check completed"
