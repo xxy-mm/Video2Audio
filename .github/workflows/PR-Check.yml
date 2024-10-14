@@ -16,9 +16,10 @@ jobs:
       - run: echo "The repository has been cloned to the runner"
       - name: Check if branch is uptodate
         run: |
-          BASE = ${{ github.event.pull_request.base.ref }}
-          git fetch origin $BASE
-          if ! git merge-base --is-ancestor origin/$BASE HEAD;
+          BASE_BRANCH = ${{ github.event.pull_request.base.ref }}
+          echo "BASE_BRANCH is $BASE_BRANCH"
+          git fetch origin $BASE_BRANCH
+          if ! git merge-base --is-ancestor origin/$BASE_BRANCH HEAD;
           then echo "This branch is not up to date with ";
           exit 1; fi
       - run: echo "Branch is up to date"
