@@ -1,0 +1,20 @@
+name: PR-Check
+
+on:
+  pull_request:
+    branches: [ "dev", "main", "prod" ]
+
+jobs:
+  Check-pr-uptodate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "The repository has been cloned to the runner"
+      - name: Check if branch is uptodate
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          if ! git merge-base --is-ancestor origin/${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.sha }};
+          then echo "This branch is not up to date with ${{ github.event.pull_request.base.ref }}";
+          exit 1; fi
+      - run: echo "Branch is up to date with ${{ github.event.pull_request.base.ref }}"
