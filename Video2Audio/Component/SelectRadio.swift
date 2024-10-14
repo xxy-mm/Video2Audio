@@ -40,4 +40,5 @@ struct SelectRadio: View {
             collection.append(current)
         }
     }
+
 }

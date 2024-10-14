@@ -24,7 +24,12 @@ class AudioPlayer: NSObject {
 
     func loadAudioFile(at index: Int) {
         
+        guard index < audios.count else {
+            print("No Audios to play")
+            return
+        }
         let url = audios[index]
+        
         do {
             player = try AVAudioPlayer(contentsOf: url)
             player?.delegate = self

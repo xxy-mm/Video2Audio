@@ -14,7 +14,6 @@ struct BatchActionBar: View {
     var onDelete: (() -> Void)?
     var body: some View {
         VStack {
-            Spacer()
             HStack {
                 if let onExport{
                     Button("Export") {
@@ -36,9 +35,8 @@ struct BatchActionBar: View {
                     }
                 }
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background()
         }
+        .padding()
+        .background()
     }
 }

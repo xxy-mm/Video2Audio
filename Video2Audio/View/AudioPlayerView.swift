@@ -9,12 +9,12 @@ import SwiftUI
 import SwiftData
 
 struct AudioPlayerView: View {
-    @Binding var audioIndexToPlay: Int
-    @Query var audios: [AudioResult]
+    var audios: [AudioResult]
+    @Binding var audioToPlay: Int
     @State var audioPlayer = AudioPlayer()
         var body: some View {
             VStack {
-                Text("Now Playing: \(audios[audioIndexToPlay].title)")
+                Text("Now Playing: \(audios[audioToPlay].title)")
                     .font(.headline)
                     .padding()
                 
@@ -51,22 +51,20 @@ struct AudioPlayerView: View {
             .frame(maxWidth: .infinity)
             .background()
             .onChange(of: audioPlayer.currentIndex, { oldValue, newValue in
-                audioIndexToPlay = newValue
-                
-            })
-            .onChange(of: audioIndexToPlay, { oldValue, newValue in
-                audioPlayer.play(at: audioIndexToPlay)
+                // TODO: currentIndexChange -> get id of currentAudio -> pass to parent
+                let newAudioId = audios[newValue].id
+                audioToPlay = newValue
             })
             .onChange(of: audios, { oldValue, newValue in
                 audioPlayer.setAudios(audioURLs: audios.map {$0.audioURL})
             })
             .onAppear {
                 audioPlayer.setAudios(audioURLs: audios.map{$0.audioURL})
-                audioPlayer.play(at: audioIndexToPlay)
+                audioPlayer.play(at: audioToPlay)
             }
         }
 }
 
 #Preview {
-    AudioPlayerView(audioIndexToPlay: .constant(0))
+    AudioPlayerView(audios: [], audioToPlay: .constant(0))
 }

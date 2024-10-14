@@ -24,6 +24,23 @@ struct AudioListView: View {
     @State private var selectedAudios = [AudioResult]()
     @State private var editMode: EditMode = .inactive
     @State private var hasSelectAll = false
+    /// file exporter
+    @State private var audiosToExport = Set<AudioResult>()
+    @State private var showExporter = false
+
+    /// alert
+    @State private var showAlert = false
+    @State private var message = ""
+
+    let title = "Audios"
+    let playingIndicatorIcon = "waveform"
+    let trashIcon = "trash"
+    let exportIcon = "square.and.arrow.up"
+    let selectAllText = "Select All"
+    let deselectAllText = "Deselect All"
+    let importIcon = "plus"
+    let editButtonText = "Edit"
+    let editButtonDoneText = "Done"
 
     var body: some View {
         NavigationStack {
@@ -37,115 +54,72 @@ struct AudioListView: View {
                                 }
                                 playButton(audio)
                                 Spacer()
-                                waveFormIcon(audio)
+                                Image(systemName: playingIndicatorIcon)
+                                    .if(isPlaying(audio: audio))
                                 audio.icon
                             }
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    deleteAudio(audio)
+                                } label: {
+                                    Image(systemName: trashIcon)
+                                }
+
+                                Button {
+                                    audiosToExport.insert(audio)
+                                    showExporter = true
+                                } label: {
+                                    Image(systemName: exportIcon)
+                                }
+                                .tint(.blue)
+                            }
                         }
-                        .onDelete(perform: delete)
                     }
                 }
                 .listStyle(.plain)
-                .toolbar {
-                    if editMode == .active {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button(hasSelectAll ? "DeSelect All" : " Select All") {
-                                hasSelectAll ? selectedAudios.removeAll() : selectedAudios.append(contentsOf: audios)
-                                hasSelectAll.toggle()
-                                print(selectedAudios.count)
-                            }
-                        }
-                    }
-
-                    ToolbarItem {
-                        Button {
-                            if editMode == .active {
-                                editMode = .inactive
-                            } else {
-                                editMode = .active
-                            }
-                        } label: {
-                            Text(editMode == .inactive ? "Edit" : "Done")
-                        }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            showVideoPicker = true
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .fileImporter(isPresented: $showVideoPicker, allowedContentTypes: [.mpeg, .mpeg2Video, .mpeg4Movie, .quickTimeMovie], allowsMultipleSelection: true) { result in
-                            convertItems(result)
-                        }
-                    }
-                }
-                if showPlayerView {
-                    VStack {
-                        Spacer()
-                        AudioPlayerView(audioIndexToPlay: $audioIndexToPlay)
-                    }
-                }
-
-                if editMode == .active {
+                .safeAreaInset(edge: .bottom, content: {
+                    AudioPlayerView(audios: selectedAudios, audioToPlay: $audioIndexToPlay)
+                        .if(showPlayerView)
+                })
+                .safeAreaInset(edge: .bottom, content: {
                     BatchActionBar {
-                        
                     } onPlay: {
-                        
                     } onDelete: {
                         for audio in selectedAudios {
                             modelContext.delete(audio)
                         }
                         editMode = .inactive
+                    }.if(editMode == .active)
+                })
+                .toolbar {
+                    if editMode == .active {
+                        selectAllButton()
+                    }
+                    editButton()
+                    importButton()
+                }
+                .navigationTitle(title)
+                .fileImporter(isPresented: $showVideoPicker, allowedContentTypes: [.mpeg, .mpeg2Video, .mpeg4Movie, .quickTimeMovie], allowsMultipleSelection: true, onCompletion: convertVideos)
+                .fileExporter(isPresented: $showExporter, documents: audiosToExport.map { AudioFile(url: $0.audioURL) }, contentType: .mpeg4Audio) { result in
+                    do {
+                        _ = try result.get()
+                        audiosToExport.removeAll()
+                    } catch {
+                        // TODO: record error
+                        showAlert = true
+                        message = error.localizedDescription
                     }
                 }
-            }
-            .navigationTitle("Audios")
-        }
-    }
-    
-    @ViewBuilder
-    func waveFormIcon(_ audio: AudioResult) -> some View {
-        
-            if let index = audios.firstIndex(of: audio),
-               index == audioIndexToPlay,
-               showPlayerView {
-                Image(systemName: "waveform")
-            }
-        
-    }
-
-    func convertItems(_ result: Result<[URL], any Error>) {
-        do {
-            let urls = try result.get()
-            print("Result: \(result)")
-            let convertingItems = urls.map { AudioResult(videoURL: $0, audioURL: VideoConverter.getAudioURL(from: $0)) }
-            startConvert(convertingItems: convertingItems)
-        } catch {
-            print("Failed to get result: \(error.localizedDescription)")
-        }
-    }
-
-    func startConvert(convertingItems: [AudioResult]) {
-        for item in convertingItems {
-            let videoURL = item.videoURL
-            let gotAccess = videoURL.startAccessingSecurityScopedResource()
-            if !gotAccess {
-                print("Failed to access security video files")
-                return
-            }
-            let audioURL = item.audioURL
-            print("audioURL: \(audioURL)")
-            Task {
-                if await VideoConverter.convertVideoToAudio(video: videoURL, audio: audioURL) {
-                    item.status = .success
-                } else {
-                    item.status = .error
+                .alert("export status", isPresented: $showAlert) {
+                } message: {
+                    Text(message)
                 }
-                modelContext.insert(item)
-                videoURL.stopAccessingSecurityScopedResource()
             }
         }
     }
-    
+
+    // MARK: - views
+
     func playButton(_ audio: AudioResult) -> some View {
         Group {
             Button {
@@ -160,12 +134,87 @@ struct AudioListView: View {
             }
         }
     }
-    
-    func delete(indexSet: IndexSet) {
-        for index in indexSet {
-            // TODO: also delete the file
-            modelContext.delete(audios[index])
+
+    func importButton() -> some ToolbarContent {
+        ToolbarItem(placement: .confirmationAction) {
+            Button {
+                showVideoPicker = true
+            } label: {
+                Image(systemName: importIcon)
+            }
         }
+    }
+
+    func selectAllButton() -> some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button(hasSelectAll ? deselectAllText : selectAllText) {
+                hasSelectAll ? selectedAudios.removeAll() : selectedAudios.append(contentsOf: audios)
+                withAnimation {
+                    hasSelectAll.toggle()
+                }
+            }
+        }
+    }
+
+    func editButton() -> some ToolbarContent {
+        ToolbarItem {
+            Button {
+                if editMode == .active {
+                    withAnimation {
+                        editMode = .inactive
+                    }
+                } else {
+                    withAnimation {
+                        editMode = .active
+                    }
+                }
+            } label: {
+                Text(editMode == .inactive ? editButtonText : editButtonDoneText)
+            }
+        }
+    }
+
+    // MARK: - functions
+
+    func convertVideos(_ result: Result<[URL], any Error>) {
+        do {
+            let urls = try result.get()
+
+            for url in urls {
+                Task {
+                    let gotAccess = url.startAccessingSecurityScopedResource()
+                    if !gotAccess {
+                        print("Failed to access security video files")
+                        return
+                    }
+                    let audioURL = VideoConverter.getAudioURL(from: url)
+                    let item = AudioResult(videoURL: url, audioURL: audioURL)
+                    modelContext.insert(item)
+                    if await VideoConverter.convertVideoToAudio(video: item.videoURL, audio: item.audioURL) {
+                        item.status = .success
+                    } else {
+                        item.status = .error
+                    }
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+        } catch {
+            print("Failed to convert: \(error.localizedDescription)")
+        }
+    }
+
+    func deleteAudio(_ audio: AudioResult) {
+        // TODO: also delete the file
+        modelContext.delete(audio)
+    }
+
+    func isPlaying(audio: AudioResult) -> Bool {
+        if let index = audios.firstIndex(of: audio),
+           index == audioIndexToPlay,
+           showPlayerView {
+            return true
+        }
+        return false
     }
 }
 
