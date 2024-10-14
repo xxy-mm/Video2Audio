@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct Video2AudioApp: App {
+    @State private var modelContainer = try! ModelContainer(for: AudioResult.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .modelContainer(modelContainer)
         }
     }
 }
