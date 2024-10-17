@@ -10,8 +10,8 @@ import SwiftData
 import SwiftUI
 
 struct SelectRadio: View {
-    @Binding var collection: [AudioResult]
-    var current: AudioResult
+    @Binding var collection: [AudioItem]
+    var current: AudioItem
 
     private let checked = (icon: "checkmark.circle.fill", text: "checked", iconColor: Color.accentColor)
     private let unChecked = (icon: "circle", text: "unchecked", iconColor: Color.secondary)

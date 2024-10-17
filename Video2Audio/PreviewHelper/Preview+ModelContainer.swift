@@ -10,11 +10,11 @@ import SwiftData
 
 extension ModelContainer {
     static var sample: () throws -> ModelContainer = {
-        let schema = Schema([AudioResult.self])
+        let schema = Schema([AudioItem.self])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [configuration])
         Task { @MainActor in
-            AudioResult.insertSampleData(modelContext: container.mainContext)
+            AudioItem.insertSampleData(modelContext: container.mainContext)
         }
         return container
     }
