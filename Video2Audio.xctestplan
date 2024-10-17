@@ -1,0 +1,28 @@
+{
+  "configurations" : [
+    {
+      "id" : "66F8CA8C-65B7-454D-826D-3D2FC6DA15D4",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Video2Audio.xcodeproj",
+      "identifier" : "C23E11422CAFE40800D94113",
+      "name" : "Video2Audio"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Video2Audio.xcodeproj",
+        "identifier" : "C28191482CBF6F2C001944B3",
+        "name" : "Video2AudioTests"
+      }
+    }
+  ],
+  "version" : 1
+}
