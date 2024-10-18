@@ -11,8 +11,8 @@ import SwiftUI
 struct AudioPlayerView: View {
     var playlist: [AudioItem]
     @Binding var currentPlayingAudio: AudioItem?
-    @State var audioPlayer = AudioPlayer()
-
+    @State private var audioPlayer = AudioPlayer()
+    @State private var showPlaylist = false
     var title: String {
         audioPlayer.currentAudio?.title ?? ""
     }
@@ -45,11 +45,48 @@ struct AudioPlayerView: View {
                         .resizable()
                         .frame(width: 40, height: 40)
                 }
+                Button {
+                    showPlaylist = true
+                } label: {
+                    Image(systemName: "list.bullet")
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                }
             }
         }
         .frame(maxWidth: .infinity)
         .background()
-       
+        .sheet(isPresented: $showPlaylist, content: {
+            NavigationStack{
+                List {
+                    
+                    ForEach($audioPlayer.playlist) { $audio in
+                        HStack {
+                            Text(audio.title)
+                            Spacer()
+                            Image(systemName: "waveform")
+                                .if(isPlaying(audio: audio))
+                        }
+                    }
+                    .onMove { from, to in
+                        audioPlayer.playlist.move(fromOffsets: from, toOffset: to)
+                    }
+                    .onDelete { indices in
+                        for index in indices {
+                            audioPlayer.playlist.remove(at: index)
+                        }
+                    }
+                }
+                .listStyle(.plain)
+                .padding()
+                .toolbar {
+                    EditButton()
+                }
+            }
+        })
+        .onChange(of: audioPlayer.currentAudio, { _, newValue in
+            currentPlayingAudio = newValue
+        })
         .onChange(of: playlist, { oldValue, newValue in
             print("playlist changed:")
             print("old audios: \(oldValue.map{$0.title})")
@@ -59,6 +96,10 @@ struct AudioPlayerView: View {
         .onAppear {
             audioPlayer.setAudios(playlist)
         }
+    }
+
+    func isPlaying(audio: AudioItem) -> Bool {
+        return audio.id == currentPlayingAudio?.id
     }
 
     func loopImage() -> some View {
@@ -75,7 +116,6 @@ struct AudioPlayerView: View {
             .resizable()
             .disabled(audioPlayer.loopingStatus == .none)
             .frame(width: 40, height: 40)
-            
     }
 }
 
