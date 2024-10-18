@@ -12,20 +12,20 @@ import SwiftUI
 struct AudioListView: View {
     /// swift data
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \AudioResult.title) private var audios: [AudioResult]
+    @Query(sort: \AudioItem.title) private var audios: [AudioItem]
     /// file importer
     @State private var showVideoPicker = false
     /// audio player
-    @State private var audioIndexToPlay = 0
+    @State private var currentPlayingAudio: AudioItem?
     @State private var showPlayerView = false
-    @State private var playList = [AudioResult]()
+    @State private var playList = [AudioItem]()
 
     /// edit mode
-    @State private var selectedAudios = [AudioResult]()
+    @State private var selectedAudios = [AudioItem]()
     @State private var editMode: EditMode = .inactive
     @State private var hasSelectAll = false
     /// file exporter
-    @State private var audiosToExport = Set<AudioResult>()
+    @State private var audiosToExport = Set<AudioItem>()
     @State private var showExporter = false
 
     /// alert
@@ -44,94 +44,92 @@ struct AudioListView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                List {
-                    if !audios.isEmpty {
-                        ForEach(audios) { audio in
-                            HStack {
-                                if editMode == .active {
-                                    SelectRadio(collection: $selectedAudios, current: audio)
-                                }
-                                playButton(audio)
-                                Spacer()
-                                Image(systemName: playingIndicatorIcon)
-                                    .if(isPlaying(audio: audio))
-                                audio.icon
+            List {
+                if !audios.isEmpty {
+                    ForEach(audios) { audio in
+                        HStack {
+                            if editMode == .active {
+                                SelectRadio(collection: $selectedAudios, current: audio)
                             }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    deleteAudio(audio)
-                                } label: {
-                                    Image(systemName: trashIcon)
-                                }
+                            playButton(audio)
+                            Spacer()
+                            Image(systemName: playingIndicatorIcon)
+                                .if(isPlaying(audio: audio))
+                            audio.icon
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                deleteAudio(audio)
+                            } label: {
+                                Image(systemName: trashIcon)
+                            }
 
-                                Button {
-                                    audiosToExport.insert(audio)
-                                    showExporter = true
-                                } label: {
-                                    Image(systemName: exportIcon)
-                                }
-                                .tint(.blue)
+                            Button {
+                                audiosToExport.insert(audio)
+                                showExporter = true
+                            } label: {
+                                Image(systemName: exportIcon)
                             }
+                            .tint(.blue)
                         }
                     }
                 }
-                .listStyle(.plain)
-                .safeAreaInset(edge: .bottom, content: {
-                    AudioPlayerView(audios: selectedAudios, audioToPlay: $audioIndexToPlay)
-                        .if(showPlayerView)
-                })
-                .safeAreaInset(edge: .bottom, content: {
-                    BatchActionBar {
-                    } onPlay: {
-                    } onDelete: {
-                        for audio in selectedAudios {
-                            modelContext.delete(audio)
-                        }
-                        editMode = .inactive
-                    }.if(editMode == .active)
-                })
-                .toolbar {
-                    if editMode == .active {
-                        selectAllButton()
+            }
+            .listStyle(.plain)
+            .safeAreaInset(edge: .bottom, content: {
+                AudioPlayerView(playlist: playList, currentPlayingAudio: $currentPlayingAudio)
+                    .if(showPlayerView)
+            })
+            .safeAreaInset(edge: .bottom, content: {
+                BatchActionBar {
+                    audiosToExport = Set(selectedAudios)
+                    editMode = .inactive
+                } onPlay: {
+                    updatePlayList(selectedAudios)
+                    editMode = .inactive
+                } onDelete: {
+                    for audio in selectedAudios {
+                        deleteAudio(audio)
                     }
-                    editButton()
-                    importButton()
+                    editMode = .inactive
+                }.if(editMode == .active)
+            })
+            .toolbar {
+                if editMode == .active {
+                    selectAllButton()
                 }
-                .navigationTitle(title)
-                .fileImporter(isPresented: $showVideoPicker, allowedContentTypes: [.mpeg, .mpeg2Video, .mpeg4Movie, .quickTimeMovie], allowsMultipleSelection: true, onCompletion: convertVideos)
-                .fileExporter(isPresented: $showExporter, documents: audiosToExport.map { AudioFile(url: $0.audioURL) }, contentType: .mpeg4Audio) { result in
-                    do {
-                        _ = try result.get()
-                        audiosToExport.removeAll()
-                    } catch {
-                        // TODO: record error
-                        showAlert = true
-                        message = error.localizedDescription
-                    }
+                editButton()
+                importButton()
+            }
+            .navigationTitle(title)
+            .fileImporter(isPresented: $showVideoPicker, allowedContentTypes: [.mpeg, .mpeg2Video, .mpeg4Movie, .quickTimeMovie], allowsMultipleSelection: true, onCompletion: convertVideos)
+            .fileExporter(isPresented: $showExporter, documents: audiosToExport.map { AudioFile(url: $0.url) }, contentType: .mpeg4Audio) { result in
+                do {
+                    _ = try result.get()
+                    audiosToExport.removeAll()
+                } catch {
+                    // TODO: record error
+                    showAlert = true
+                    message = error.localizedDescription
                 }
-                .alert("export status", isPresented: $showAlert) {
-                } message: {
-                    Text(message)
-                }
+            }
+            .alert("export status", isPresented: $showAlert) {
+            } message: {
+                Text(message)
             }
         }
     }
 
     // MARK: - views
 
-    func playButton(_ audio: AudioResult) -> some View {
-        Group {
-            Button {
-                if editMode == .inactive,
-                   audio.status == .success,
-                   let index = audios.firstIndex(of: audio) {
-                    audioIndexToPlay = index
-                    showPlayerView = true
-                }
-            } label: {
-                Text(audio.title)
+    func playButton(_ audio: AudioItem) -> some View {
+        Button {
+            if editMode == .inactive,
+               audio.status == .success {
+                updatePlayList([audio])
             }
+        } label: {
+            Text(audio.title)
         }
     }
 
@@ -175,7 +173,14 @@ struct AudioListView: View {
     }
 
     // MARK: - functions
-
+    func updatePlayList(_ audios: [AudioItem]) {
+        playList = audios
+        if playList.count > 0 {
+            showPlayerView = true
+        } else {
+            showPlayerView = false
+        }
+    }
     func convertVideos(_ result: Result<[URL], any Error>) {
         do {
             let urls = try result.get()
@@ -188,9 +193,9 @@ struct AudioListView: View {
                         return
                     }
                     let audioURL = VideoConverter.getAudioURL(from: url)
-                    let item = AudioResult(videoURL: url, audioURL: audioURL)
+                    let item = AudioItem(videoURL: url, audioURL: audioURL)
                     modelContext.insert(item)
-                    if await VideoConverter.convertVideoToAudio(video: item.videoURL, audio: item.audioURL) {
+                    if await VideoConverter.convertVideoToAudio(video: item.sourceURL, audio: item.url) {
                         item.status = .success
                     } else {
                         item.status = .error
@@ -203,18 +208,26 @@ struct AudioListView: View {
         }
     }
 
-    func deleteAudio(_ audio: AudioResult) {
+    func deleteAudio(_ audio: AudioItem) {
         // TODO: also delete the file
-        modelContext.delete(audio)
+        // TODO: if the audio is playing, we need to do some extra work before deleting
+        if audio.isDeleted {
+            modelContext.delete(audio)
+        }else {
+            audio.isDeleted = true
+        }
     }
 
-    func isPlaying(audio: AudioResult) -> Bool {
-        if let index = audios.firstIndex(of: audio),
-           index == audioIndexToPlay,
-           showPlayerView {
-            return true
+    func isPlaying(audio: AudioItem) -> Bool {
+        return audio.id == currentPlayingAudio?.id
+    }
+
+    // first we add it to the playlist
+    // then we start to play the first one
+    func addToPlaylist(audios: [AudioItem]) {
+        for audio in audios {
+            print("Added to \(audio.title) to playlist.")
         }
-        return false
     }
 }
 
