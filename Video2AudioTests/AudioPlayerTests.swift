@@ -31,29 +31,39 @@ final class AudioPlayerSingleAudioTests: XCTestCase {
         XCTAssert(audioPlayer.loopingStatus == .none)
         XCTAssert(audioPlayer.player == nil)
     }
-    // MARK: - invalid audio
+    // MARK: - set audios and play. The playlist auto starts playing after the playlist is set.
+    /// When the playlist is set with invalid audios
     func testPlayInvalidAudio() {
         audioPlayer.setAudios(AudioItem.sampleData)
         XCTAssert(audioPlayer.isPlaying == false, "Playing an invalid audio should not change the isPlaying to true")
         XCTAssert(audioPlayer.player == nil, "Playing an invalid audio should not create the player instance")
+        XCTAssert(audioPlayer.currentIndex == 0, "Playing an invalid audio should not change the currentIndex")
+        XCTAssert(audioPlayer.error != nil, "Playing an in valid audio should set error")
     }
-    // MARK: - play
-    // Play
-    func testPlayingValidAudio() {
+    
+    /// When the playlist is set with valid audios
+    func testPlayValidAudio() {
         audioPlayer.setAudios([audioItem1])
         XCTAssert(audioPlayer.isPlaying == true, "Playing an audio should change the isPlaying to true")
         XCTAssert(audioPlayer.player != nil, "Playing an audio should create the player instance")
     }
+    /// When the playlist is empty
+    func testPlayEmptyList() {
+        audioPlayer.setAudios([])
+        XCTAssert(audioPlayer.isPlaying == false, "Playing an invalid audio should not change the isPlaying to true")
+        XCTAssert(audioPlayer.player == nil, "Playing an invalid audio should not create the player instance")
+        XCTAssert(audioPlayer.currentIndex == 0, "Playing an invalid audio should not change the currentIndex")
+        XCTAssert(audioPlayer.error == nil, "Playing an empty list should not produce errors")
+    }
     
     // MARK: - looping
-    // Looping:none
+    // Single audio in playlist, with looping set to none
     func testLoopingNone() async {
         let duration = try! await AVURLAsset(url: audioItem1.url).load(.duration)
         audioPlayer.setAudios([audioItem1])
         audioPlayer.player?.currentTime = duration.seconds - 1
-        XCTAssert(audioPlayer.isPlaying == true, "Playing an audio should change the isPlaying to true")
-        XCTAssert(audioPlayer.player != nil, "Playing an audio should create the player instance")
         let expectation = self.expectation(description: "3 seconds")
+        
         DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) { [self] in
             XCTAssert(audioPlayer.isPlaying == false, "isPlaying should set to false when audio reach the end")
             expectation.fulfill()

@@ -36,20 +36,21 @@ class AudioPlayer: NSObject {
         isPlaying = false
     }
 
-    func loadAudioFile(at index: Int) throws {
+    func loadAudioFile(at index: Int) -> Bool {
         guard index >= 0 && index < playlist.count else {
             print("No audio to play")
-            return
+            return false
         }
         let url = playlist[index].url
         do {
             player = try AVAudioPlayer(contentsOf: url)
             player?.delegate = self
             player?.prepareToPlay()
+            return true
         } catch {
             print("Error loading audio file: \(error)")
             self.error = error
-            throw error
+            return false
         }
     }
 
@@ -68,7 +69,7 @@ class AudioPlayer: NSObject {
             player.play()
             isPlaying = true
         } else {
-            if let _ = try? loadAudioFile(at: currentIndex) {
+            if loadAudioFile(at: currentIndex) {
                 player?.play()
                 isPlaying = true
             }
