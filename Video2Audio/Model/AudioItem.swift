@@ -11,6 +11,7 @@ import SwiftUI
 
 @Model
 class AudioItem {
+    var id = UUID()
     var status: VideoConvertStatus
     var sourceURL: URL
     var url: URL
