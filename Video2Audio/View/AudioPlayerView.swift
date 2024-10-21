@@ -9,56 +9,94 @@ import SwiftData
 import SwiftUI
 
 struct AudioPlayerView: View {
-    var playlist: [AudioItem]
+    var playlist: Playlist?
     @Binding var currentPlayingAudio: AudioItem?
-    @State var audioPlayer = AudioPlayer()
+
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var audioPlayer = AudioPlayer()
+    @State private var showPlaylist = false
+    @State private var playlistTitle = ""
 
     var title: String {
         audioPlayer.currentAudio?.title ?? ""
     }
 
     var body: some View {
-        VStack {
-            Text("Now Playing: \(title)")
-                .font(.headline)
-                .padding()
+        HStack {
+            VStack {
+                Text("Now Playing: \(title)")
+                    .font(.headline)
+                    .padding()
 
-            HStack(spacing: 30) {
-                Button(action: {
-                    audioPlayer.changeLoop()
-                }) {
-                    loopImage()
+                HStack(spacing: 30) {
+                    Button(action: {
+                        audioPlayer.changeLoop()
+                    }) {
+                        loopImage()
+                    }
+
+                    Button(action: {
+                        audioPlayer.isPlaying ? audioPlayer.pause() : audioPlayer.play()
+                    }) {
+                        Image(systemName: audioPlayer.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                            .resizable()
+                            .frame(width: 30, height: 30)
+                    }
+                    Button(action: {
+                        audioPlayer.playNext()
+                    }) {
+                        Image(systemName: "forward.fill")
+                            .resizable()
+                            .frame(width: 30, height: 30)
+                    }
+                    Button {
+                        showPlaylist = true
+                    } label: {
+                        Image(systemName: "list.bullet")
+                            .resizable()
+                            .frame(width: 30, height: 30)
+                    }
+                }
+            }
+
+            .frame(maxWidth: .infinity)
+            .padding(.bottom)
+            .background()
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .shadow(color: .gray, radius: 3)
+            .sheet(isPresented: $showPlaylist, content: {
+                if let playlist {
+                    PlaylistView(playlist: playlist)
+                }
+            })
+            .onChange(of: audioPlayer.currentAudio, { _, newValue in
+                currentPlayingAudio = newValue
+            })
+            .onChange(of: playlist, { oldValue, newValue in
+                print("playlist changed:")
+                print("old audios: \(oldValue?.audioItems.map { $0.title } ?? [nil])")
+                print("new audios: \(newValue?.audioItems.map { $0.title } ?? [nil])")
+                if let newValue {
+                    audioPlayer.setAudios(newValue.audioItems)
+                } else {
+                    audioPlayer.setAudios([])
                 }
 
-                Button(action: {
-                    audioPlayer.isPlaying ? audioPlayer.pause() : audioPlayer.play()
-                }) {
-                    Image(systemName: audioPlayer.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .resizable()
-                        .frame(width: 40, height: 40)
-                }
-
-                Button(action: {
-                    audioPlayer.playNext()
-                }) {
-                    Image(systemName: "forward.fill")
-                        .resizable()
-                        .frame(width: 40, height: 40)
+            })
+            .task {
+                if let playlist {
+                    audioPlayer.setAudios(playlist.audioItems)
+                } else {
+                    audioPlayer.setAudios([])
                 }
             }
         }
-        .frame(maxWidth: .infinity)
-        .background()
-       
-        .onChange(of: playlist, { oldValue, newValue in
-            print("playlist changed:")
-            print("old audios: \(oldValue.map{$0.title})")
-            print("new audios: \(newValue.map{$0.title})")
-            audioPlayer.setAudios(playlist)
-        })
-        .onAppear {
-            audioPlayer.setAudios(playlist)
-        }
+        .padding(.horizontal)
+    }
+
+    func isPlaying(audio: AudioItem) -> Bool {
+        return audio.id == currentPlayingAudio?.id
     }
 
     func loopImage() -> some View {
@@ -75,10 +113,13 @@ struct AudioPlayerView: View {
             .resizable()
             .disabled(audioPlayer.loopingStatus == .none)
             .frame(width: 40, height: 40)
-            
     }
 }
 
-#Preview {
-    AudioPlayerView(playlist: AudioItem.sampleData, currentPlayingAudio: .constant(nil))
+#Preview("multiple audios") {
+    AudioPlayerView(playlist: Playlist(title: "list1", audioItems: AudioItem.sampleData.suffix(3)), currentPlayingAudio: .constant(nil))
+}
+
+#Preview("single audio") {
+    AudioPlayerView(playlist: Playlist(title: "list2", audioItems: AudioItem.sampleData.suffix(1)), currentPlayingAudio: .constant(nil))
 }

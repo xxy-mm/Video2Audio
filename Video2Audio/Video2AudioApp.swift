@@ -10,7 +10,7 @@ import SwiftData
 
 @main
 struct Video2AudioApp: App {
-    @State private var modelContainer = try! ModelContainer(for: AudioItem.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    @State private var modelContainer = try! ModelContainer.sample()
     var body: some Scene {
         WindowGroup {
             ContentView()

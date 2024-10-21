@@ -18,7 +18,7 @@ struct AudioListView: View {
     /// audio player
     @State private var currentPlayingAudio: AudioItem?
     @State private var showPlayerView = false
-    @State private var playList = [AudioItem]()
+    @State private var playList: Playlist?
 
     /// edit mode
     @State private var selectedAudios = [AudioItem]()
@@ -54,7 +54,9 @@ struct AudioListView: View {
                             playButton(audio)
                             Spacer()
                             Image(systemName: playingIndicatorIcon)
-                                .if(isPlaying(audio: audio))
+                                .if(!isPlaying(audio: audio)) { view in
+                                    view.hidden()
+                                }
                             audio.icon
                         }
                         .swipeActions(edge: .trailing) {
@@ -77,21 +79,25 @@ struct AudioListView: View {
             }
             .listStyle(.plain)
             .safeAreaInset(edge: .bottom, content: {
-                AudioPlayerView(playlist: playList, currentPlayingAudio: $currentPlayingAudio)
-                    .if(showPlayerView)
+                VStack {
+                    AudioPlayerView(playlist: playList, currentPlayingAudio: $currentPlayingAudio)
+                        .if(showPlayerView && editMode == .inactive)
+                }
+                .padding(.bottom)
+
             })
             .safeAreaInset(edge: .bottom, content: {
                 BatchActionBar {
                     audiosToExport = Set(selectedAudios)
-                    editMode = .inactive
+                    resetSelection()
                 } onPlay: {
                     updatePlayList(selectedAudios)
-                    editMode = .inactive
+                    resetSelection()
                 } onDelete: {
                     for audio in selectedAudios {
                         deleteAudio(audio)
                     }
-                    editMode = .inactive
+                    resetSelection()
                 }.if(editMode == .active)
             })
             .toolbar {
@@ -120,6 +126,12 @@ struct AudioListView: View {
         }
     }
 
+    func resetSelection() {
+        editMode = .inactive
+        selectedAudios.removeAll()
+        hasSelectAll = false
+    }
+
     // MARK: - views
 
     func playButton(_ audio: AudioItem) -> some View {
@@ -130,6 +142,8 @@ struct AudioListView: View {
             }
         } label: {
             Text(audio.title)
+                .lineLimit(2)
+                .truncationMode(.tail)
         }
     }
 
@@ -173,14 +187,14 @@ struct AudioListView: View {
     }
 
     // MARK: - functions
+
     func updatePlayList(_ audios: [AudioItem]) {
-        playList = audios
-        if playList.count > 0 {
-            showPlayerView = true
-        } else {
-            showPlayerView = false
-        }
+        guard !audios.isEmpty else { return }
+        let _playlist = Playlist(title: "Untitled playlist", audioItems: audios)
+        playList = _playlist
+        showPlayerView = true
     }
+
     func convertVideos(_ result: Result<[URL], any Error>) {
         do {
             let urls = try result.get()
@@ -211,11 +225,7 @@ struct AudioListView: View {
     func deleteAudio(_ audio: AudioItem) {
         // TODO: also delete the file
         // TODO: if the audio is playing, we need to do some extra work before deleting
-        if audio.isDeleted {
-            modelContext.delete(audio)
-        }else {
-            audio.isDeleted = true
-        }
+        modelContext.delete(audio)
     }
 
     func isPlaying(audio: AudioItem) -> Bool {
