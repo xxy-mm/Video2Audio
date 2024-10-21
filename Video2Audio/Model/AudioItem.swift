@@ -46,14 +46,21 @@ extension AudioItem {
 
 // MARK: - sample data
 extension AudioItem {
-    
+    static var ids = [
+        "B0611DD6-E4F1-47F4-AE40-CDE92A7EA522",
+        "61C40EEB-A708-4060-8157-641E370E61D8",
+        "0FFB3E3B-C701-4404-920E-15DEE71818FB",
+        "14BEC194-5933-4357-83D3-0F8BEDF93B09",
+        "5A5AA97C-C180-4B80-A5AF-56C0FCA73FEC",
+    ]
     static var sampleData: [AudioItem] {
         var items: [AudioItem] = []
-        for (i, char) in "abcdefghijklmnopqrstuvwxyz".enumerated() {
+        for (i, char) in "abcde".enumerated() {
             let item = AudioItem(videoURL: URL(string: "/ads/\(char).mp4")!, audioURL: URL(string: "/a/b/\(char).mp4")!)
-            if i < 5 {
+            item.id = UUID(uuidString: ids[i])!
+            if i < 1 {
                 item.status = .processing
-            } else if i < 8 {
+            } else if i < 3 {
                 item.status = .error
             } else {
                 item.status = .success

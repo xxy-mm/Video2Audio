@@ -12,12 +12,13 @@ import SwiftData
 final class Playlist {
     var id = UUID()
     var title: String
-    var audioIds: [UUID]
+    @Relationship(deleteRule: .noAction, inverse: nil)
+    var audioItems: [AudioItem] = []
     var currentIndex: Int
 
-    init(title: String, audioIds: [UUID], currentIndex: Int = 0) {
+    init(title: String, audioItems: [AudioItem]=[], currentIndex: Int = 0) {
         self.title = title
-        self.audioIds = audioIds
+        self.audioItems = audioItems
         self.currentIndex = currentIndex
     }
 }
@@ -25,8 +26,8 @@ final class Playlist {
 extension Playlist {
     static var sampleData: [Playlist]{
         [
-            Playlist(title: "example playlist1", audioIds: AudioItem.sampleData.prefix(10).map { $0.id }),
-            Playlist(title: "example playlist2", audioIds: AudioItem.sampleData.suffix(5).map { $0.id }),
+            Playlist(title: "example playlist1"),
+            Playlist(title: "example playlist2"),
         
         ]
     }

@@ -26,13 +26,13 @@ final class AudioPlayerSingleAudioTests: XCTestCase {
         
         XCTAssert(audioPlayer.isPlaying == false)
         XCTAssert(audioPlayer.currentIndex == 0)
-        XCTAssert(audioPlayer.playlist.isEmpty)
+        XCTAssert(audioPlayer.playItems.isEmpty)
         XCTAssert(audioPlayer.currentAudio == nil)
         XCTAssert(audioPlayer.loopingStatus == .none)
         XCTAssert(audioPlayer.player == nil)
     }
-    // MARK: - set audios and play. The playlist auto starts playing after the playlist is set.
-    /// When the playlist is set with invalid audios
+    // MARK: - set audios and play. The playItems auto starts playing after the playItems is set.
+    /// When the playItems is set with invalid audios
     func testPlayInvalidAudio() {
         audioPlayer.setAudios(AudioItem.sampleData)
         XCTAssert(audioPlayer.isPlaying == false, "Playing an invalid audio should not change the isPlaying to true")
@@ -41,13 +41,13 @@ final class AudioPlayerSingleAudioTests: XCTestCase {
         XCTAssert(audioPlayer.error != nil, "Playing an in valid audio should set error")
     }
     
-    /// When the playlist is set with valid audios
+    /// When the playItems is set with valid audios
     func testPlayValidAudio() {
         audioPlayer.setAudios([audioItem1])
         XCTAssert(audioPlayer.isPlaying == true, "Playing an audio should change the isPlaying to true")
         XCTAssert(audioPlayer.player != nil, "Playing an audio should create the player instance")
     }
-    /// When the playlist is empty
+    /// When the playItems is empty
     func testPlayEmptyList() {
         audioPlayer.setAudios([])
         XCTAssert(audioPlayer.isPlaying == false, "Playing an invalid audio should not change the isPlaying to true")
@@ -57,7 +57,7 @@ final class AudioPlayerSingleAudioTests: XCTestCase {
     }
     
     // MARK: - looping
-    // Single audio in playlist, with looping set to none
+    // Single audio in playItems, with looping set to none
     func testLoopingNone() async {
         let duration = try! await AVURLAsset(url: audioItem1.url).load(.duration)
         audioPlayer.setAudios([audioItem1])
