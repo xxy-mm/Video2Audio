@@ -52,7 +52,7 @@ struct PlaylistsView: View {
 
 #Preview {
     ModelContainerPreview {
-        try! ModelContainer.sample()
+        try! ModelContainer.setupModelContainer()
     } content: {
         PlaylistsView()
     }

@@ -117,9 +117,14 @@ struct AudioPlayerView: View {
 }
 
 #Preview("multiple audios") {
-    AudioPlayerView(playlist: Playlist(title: "list1", audioItems: AudioItem.sampleData.suffix(3)), currentPlayingAudio: .constant(nil))
+    AudioPlayerView(playlist: Playlist(title: "list1", audioItems: [
+        AudioItem(videoURL: URL(fileURLWithPath: ""), audioURL: URL(fileURLWithPath: "a.mp4")),
+        AudioItem(videoURL: URL(fileURLWithPath: ""), audioURL: URL(fileURLWithPath: "b.mp4"))
+    ]), currentPlayingAudio: .constant(nil))
 }
 
 #Preview("single audio") {
-    AudioPlayerView(playlist: Playlist(title: "list2", audioItems: AudioItem.sampleData.suffix(1)), currentPlayingAudio: .constant(nil))
+    AudioPlayerView(playlist: Playlist(title: "list2", audioItems: [
+        AudioItem(videoURL: URL(fileURLWithPath: ""), audioURL: URL(fileURLWithPath: "a.mp4"))
+    ]), currentPlayingAudio: .constant(nil))
 }
