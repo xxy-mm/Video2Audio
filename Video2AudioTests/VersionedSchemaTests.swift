@@ -33,8 +33,20 @@ final class VersionedSchemaTests: XCTestCase {
         try ModelContainer.loadSampleDataSchemaV1(context: context)
         
         let audioItemsV1 = try context.fetch(FetchDescriptor<VersionedSchemaV1.AudioItem>())
+        let playlistsV1 = try context.fetch(FetchDescriptor<VersionedSchemaV1.Playlist>())
         
         XCTAssert(audioItemsV1.count > 0, "should successfully add audio items.")
+        XCTAssert(playlistsV1.count > 0, "should successfully insert playlists")
+        
+        // migration
+        container = try ModelContainer.setupModelContainer(for: VersionedSchemaV2.self, url: self.url)
+        context = ModelContext(container)
+        
+        let audioItemsV2 = try context.fetch(FetchDescriptor<VersionedSchemaV2.AudioItem>())
+        let playlistsV2 = try context.fetch(FetchDescriptor<VersionedSchemaV2.Playlist>())
+        
+        XCTAssert(audioItemsV2.allSatisfy {$0.isFavorite == false})
+        XCTAssert(playlistsV2.allSatisfy {$0.isFavorite == false})
         
     }
 }

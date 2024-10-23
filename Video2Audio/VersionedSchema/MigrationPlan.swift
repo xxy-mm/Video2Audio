@@ -26,8 +26,8 @@ enum MigrationPlanV1toV2: SchemaMigrationPlan {
         do {
             let items = try context.fetch(FetchDescriptor<VersionedSchemaV2.AudioItem>())
             let playlists = try context.fetch(FetchDescriptor<VersionedSchemaV2.Playlist>())
-            items.forEach { $0.isFavorite = true }
-            playlists.forEach { $0.isFavorite = true }
+            items.forEach { $0.isFavorite = false }
+            playlists.forEach { $0.isFavorite = false }
             print("migration finished.")
             
             try context.save()
