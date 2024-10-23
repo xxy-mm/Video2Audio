@@ -53,6 +53,7 @@ struct AudioListView: View {
                             }
                             playButton(audio)
                             Spacer()
+                            
                             Image(systemName: playingIndicatorIcon)
                                 .if(!isPlaying(audio: audio)) { view in
                                     view.hidden()
@@ -135,7 +136,8 @@ struct AudioListView: View {
     // MARK: - views
 
     func playButton(_ audio: AudioItem) -> some View {
-        Button {
+        
+        return Button {
             if editMode == .inactive,
                audio.status == .success {
                 updatePlayList([audio])
@@ -145,6 +147,7 @@ struct AudioListView: View {
                 .lineLimit(2)
                 .truncationMode(.tail)
         }
+        .buttonStyle(.plain)
     }
 
     func importButton() -> some ToolbarContent {
@@ -243,7 +246,7 @@ struct AudioListView: View {
 
 #Preview {
     ModelContainerPreview {
-        try! ModelContainer.sample()
+        try! ModelContainer.setupModelContainer()
     } content: {
         AudioListView()
     }

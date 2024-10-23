@@ -63,8 +63,8 @@ struct PlaylistView: View {
 
 #Preview {
     ModelContainerPreview {
-        try! ModelContainer.sample()
+        try! ModelContainer.setupModelContainer()
     } content: {
-        PlaylistView(playlist: Playlist.sampleData[0])
+        PlaylistView(playlist: Playlist(title: "example playlist"))
     }
 }
