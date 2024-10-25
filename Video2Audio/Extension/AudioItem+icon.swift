@@ -27,7 +27,7 @@ extension AudioItem {
 
 extension AudioItem {
     static var sampleData: [AudioItem] {
-        var ids = [
+        let ids = [
             "B0611DD6-E4F1-47F4-AE40-CDE92A7EA522",
             "61C40EEB-A708-4060-8157-641E370E61D8",
             "0FFB3E3B-C701-4404-920E-15DEE71818FB",
