@@ -53,7 +53,7 @@ struct AudioListView: View {
                             }
                             playButton(audio)
                             Spacer()
-                            
+
                             Image(systemName: playingIndicatorIcon)
                                 .if(!isPlaying(audio: audio)) { view in
                                     view.hidden()
@@ -136,7 +136,6 @@ struct AudioListView: View {
     // MARK: - views
 
     func playButton(_ audio: AudioItem) -> some View {
-        
         return Button {
             if editMode == .inactive,
                audio.status == .success {
@@ -245,7 +244,7 @@ struct AudioListView: View {
 }
 
 #Preview {
-    @Previewable @State var container = ModelContainer.previewContainer!
-        AudioListView()
-        .modelContainer(container)
+    
+    AudioListView()
+        .modelContainer(ModelContainer.previewContainer)
 }

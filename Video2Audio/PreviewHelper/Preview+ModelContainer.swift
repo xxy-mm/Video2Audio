@@ -23,15 +23,15 @@ extension ModelContainer {
 
     // MARK: - preview setup model container, only use it in preview
 
-    static let previewContainer:  ModelContainer? =  {
+    static let previewContainer:  ModelContainer =  {
         let schema = Schema(versionedSchema: SchemaLatest.self)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try? ModelContainer(for: schema, migrationPlan: MigrationPlanV1toV2.self, configurations: config)
+        let container = try! ModelContainer(for: schema, migrationPlan: MigrationPlanV1toV2.self, configurations: config)
 
         Task { @MainActor in
-            let context = container?.mainContext
-            AudioItem.sampleData.forEach { context?.insert($0) }
-            Playlist.sampleData.forEach { context?.insert($0) }
+            let context = container.mainContext
+            AudioItem.sampleData.forEach { context.insert($0) }
+            Playlist.sampleData.forEach { context.insert($0) }
         }
 
         return container

@@ -10,12 +10,10 @@ import SwiftUI
 
 @main
 struct Video2AudioApp: App {
-    private var modelContainer: ModelContainer = ModelContainer.previewContainer!
-
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .modelContainer(modelContainer)
+                .modelContainer(ModelContainer.previewContainer)
         }
     }
 }
