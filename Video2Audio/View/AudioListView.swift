@@ -245,9 +245,7 @@ struct AudioListView: View {
 }
 
 #Preview {
-    ModelContainerPreview {
-        try! ModelContainer.setupModelContainer()
-    } content: {
+    @Previewable @State var container = ModelContainer.previewContainer!
         AudioListView()
-    }
+        .modelContainer(container)
 }

@@ -51,9 +51,7 @@ struct PlaylistsView: View {
 }
 
 #Preview {
-    ModelContainerPreview {
-        try! ModelContainer.setupModelContainer()
-    } content: {
-        PlaylistsView()
-    }
+    @Previewable @State var container = ModelContainer.previewContainer!
+    PlaylistsView()
+        .modelContainer(container)
 }

@@ -12,7 +12,32 @@ import SwiftData
 
 extension ModelContainer {
     static let logger = Logger(subsystem: "com.xxy-mm.Video2Audio", category: "App")
-    // HINT: logger statements are optional
+
+    static func container(for versionedSchema: VersionedSchema.Type = SchemaLatest.self) throws -> ModelContainer {
+        let schema = Schema(versionedSchema: versionedSchema)
+        let config = ModelConfiguration(isStoredInMemoryOnly: false)
+        let container = try ModelContainer(for: schema, migrationPlan: MigrationPlanV1toV2.self, configurations: config)
+
+        return container
+    }
+
+    // MARK: - preview setup model container, only use it in preview
+
+    static let previewContainer:  ModelContainer? =  {
+        let schema = Schema(versionedSchema: SchemaLatest.self)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try? ModelContainer(for: schema, migrationPlan: MigrationPlanV1toV2.self, configurations: config)
+
+        Task { @MainActor in
+            let context = container?.mainContext
+            AudioItem.sampleData.forEach { context?.insert($0) }
+            Playlist.sampleData.forEach { context?.insert($0) }
+        }
+
+        return container
+    }()
+
+    // MARK: - test setup model container, only use it in test
 
     static func setupModelContainer(for versionedSchema: VersionedSchema.Type = SchemaLatest.self, url: URL? = nil, rollback: Bool = false) throws -> ModelContainer {
         do {
@@ -50,7 +75,7 @@ extension ModelContainer {
         typealias AudioItem = VersionedSchemaV1.AudioItem
         typealias Playlist = VersionedSchemaV1.Playlist
         let audioItems = {
-            var ids = [
+            let ids = [
                 "B0611DD6-E4F1-47F4-AE40-CDE92A7EA522",
                 "61C40EEB-A708-4060-8157-641E370E61D8",
                 "0FFB3E3B-C701-4404-920E-15DEE71818FB",

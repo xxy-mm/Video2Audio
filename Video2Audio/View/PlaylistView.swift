@@ -12,7 +12,7 @@ struct PlaylistView: View {
     var playlist: Playlist
     @Query private var playlists: [Playlist]
     @Environment(\.modelContext) private var modelContext
-    
+
     private var isInPlaylists: Bool {
         playlists.contains(playlist)
     }
@@ -62,9 +62,7 @@ struct PlaylistView: View {
 }
 
 #Preview {
-    ModelContainerPreview {
-        try! ModelContainer.setupModelContainer()
-    } content: {
-        PlaylistView(playlist: Playlist(title: "example playlist"))
-    }
+    @Previewable @State var container = ModelContainer.previewContainer!
+    PlaylistView(playlist: Playlist(title: "example playlist"))
+        .modelContainer(container)
 }

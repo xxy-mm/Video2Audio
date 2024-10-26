@@ -16,83 +16,86 @@ enum VersionedSchemaV1: VersionedSchema {
     static var models: [any PersistentModel.Type] {
         [AudioItem.self, Playlist.self]
     }
-    
-    static var versionIdentifier: Schema.Version = Schema.Version(0,0,1)
-    
+
+    static let versionIdentifier: Schema.Version = Schema.Version(0, 0, 1)
+
     @Model
     class AudioItem {
-        var id = UUID()
+        var id: UUID
         var status: VideoConvertStatus
         var sourceURL: URL
         var url: URL
         var title: String
-        init(videoURL: URL, audioURL: URL, status: VideoConvertStatus = .processing) {
+        init(videoURL: URL, audioURL: URL, status: VideoConvertStatus = .processing, id: UUID = UUID()) {
             self.sourceURL = videoURL
             self.url = audioURL
             self.status = status
             self.title = audioURL.lastPathComponent
+            self.id = id
         }
     }
-    
+
     @Model
     final class Playlist {
-        var id = UUID()
+        var id: UUID
         var title: String
         @Relationship(deleteRule: .noAction)
         var audioItems: [AudioItem] = []
         var currentIndex: Int
 
-        init(title: String, audioItems: [AudioItem]=[], currentIndex: Int = 0) {
+        init(title: String, audioItems: [AudioItem] = [], currentIndex: Int = 0, id: UUID = UUID()) {
             self.title = title
             self.audioItems = audioItems
             self.currentIndex = currentIndex
+            self.id = id
         }
     }
 }
-
 
 enum VersionedSchemaV2: VersionedSchema {
     static var models: [any PersistentModel.Type] {
         [AudioItem.self, Playlist.self]
     }
-    
-    static var versionIdentifier: Schema.Version = Schema.Version(0,0,2)
-    
+
+    static let versionIdentifier: Schema.Version = Schema.Version(0, 0, 2)
+
     @Model
     class AudioItem {
         @Attribute(.unique)
-        var id = UUID()
+        var id: UUID
         var status: VideoConvertStatus
         var sourceURL: URL
         var url: URL
         var title: String
         var isFavorite: Bool?
-        init(videoURL: URL, audioURL: URL, status: VideoConvertStatus = .processing, isFavorite: Bool = false) {
+        init(videoURL: URL, audioURL: URL, status: VideoConvertStatus = .processing, isFavorite: Bool = false, id: UUID = UUID()) {
             self.sourceURL = videoURL
             self.url = audioURL
             self.status = status
             self.title = audioURL.lastPathComponent
             self.isFavorite = isFavorite
+            self.id = id
         }
     }
-    
+
     @Model
     final class Playlist {
         @Attribute(.unique)
-        var id = UUID()
+        var id: UUID
         var title: String
-        
+
         @Relationship(deleteRule: .noAction)
         var audioItems: [AudioItem] = []
-        
+
         var currentIndex: Int
         var isFavorite: Bool?
-        init(title: String, audioItems: [AudioItem]=[], currentIndex: Int = 0, isFavorite: Bool = false) {
+        
+        init(title: String, audioItems: [AudioItem] = [], currentIndex: Int = 0, isFavorite: Bool = false, id: UUID = UUID()) {
             self.title = title
             self.audioItems = audioItems
             self.currentIndex = currentIndex
             self.isFavorite = isFavorite
+            self.id = id
         }
     }
 }
-
