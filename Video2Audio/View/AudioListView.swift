@@ -198,6 +198,7 @@ struct AudioListView: View {
     }
 
     func convertVideos(_ result: Result<[URL], any Error>) {
+        let task = ConvertionTask()
         do {
             let urls = try result.get()
 
@@ -211,6 +212,7 @@ struct AudioListView: View {
                     let audioURL = VideoConverter.getAudioURL(from: url)
                     let item = AudioItem(videoURL: url, audioURL: audioURL)
                     modelContext.insert(item)
+                    task.audioItems.append(item)
                     if await VideoConverter.convertVideoToAudio(video: item.sourceURL, audio: item.url) {
                         item.status = .success
                     } else {

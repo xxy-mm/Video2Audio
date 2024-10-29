@@ -11,6 +11,8 @@ import SwiftData
 typealias SchemaLatest = VersionedSchemaV2
 typealias AudioItem = SchemaLatest.AudioItem
 typealias Playlist = SchemaLatest.Playlist
+typealias ConvertionTask = SchemaLatest.ConvertionTask
+
 
 enum VersionedSchemaV1: VersionedSchema {
     static var models: [any PersistentModel.Type] {
@@ -27,10 +29,10 @@ enum VersionedSchemaV1: VersionedSchema {
         var url: URL
         var title: String
         init(videoURL: URL, audioURL: URL, status: VideoConvertStatus = .processing, id: UUID = UUID()) {
-            self.sourceURL = videoURL
-            self.url = audioURL
+            sourceURL = videoURL
+            url = audioURL
             self.status = status
-            self.title = audioURL.lastPathComponent
+            title = audioURL.lastPathComponent
             self.id = id
         }
     }
@@ -54,7 +56,7 @@ enum VersionedSchemaV1: VersionedSchema {
 
 enum VersionedSchemaV2: VersionedSchema {
     static var models: [any PersistentModel.Type] {
-        [AudioItem.self, Playlist.self]
+        [AudioItem.self, Playlist.self, ConvertionTask.self]
     }
 
     static let versionIdentifier: Schema.Version = Schema.Version(0, 0, 2)
@@ -69,12 +71,26 @@ enum VersionedSchemaV2: VersionedSchema {
         var title: String
         var isFavorite: Bool?
         init(videoURL: URL, audioURL: URL, status: VideoConvertStatus = .processing, isFavorite: Bool = false, id: UUID = UUID()) {
-            self.sourceURL = videoURL
-            self.url = audioURL
+            sourceURL = videoURL
+            url = audioURL
             self.status = status
-            self.title = audioURL.lastPathComponent
+            title = audioURL.lastPathComponent
             self.isFavorite = isFavorite
             self.id = id
+        }
+    }
+
+    @Model
+    class ConvertionTask {
+        var id: UUID
+        var createAt: Date = Date.now
+        @Relationship(deleteRule: .noAction)
+        var audioItems: [AudioItem] = []
+        var title: String
+
+        init(title: String = Date.now.formatted(), id: UUID = UUID()) {
+            self.id = id
+            self.title = title
         }
     }
 
@@ -89,7 +105,7 @@ enum VersionedSchemaV2: VersionedSchema {
 
         var currentIndex: Int
         var isFavorite: Bool?
-        
+
         init(title: String, audioItems: [AudioItem] = [], currentIndex: Int = 0, isFavorite: Bool = false, id: UUID = UUID()) {
             self.title = title
             self.audioItems = audioItems

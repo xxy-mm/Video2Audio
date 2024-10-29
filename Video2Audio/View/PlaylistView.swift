@@ -10,8 +10,13 @@ import SwiftUI
 
 struct PlaylistView: View {
     var playlist: Playlist
+
     @Query private var playlists: [Playlist]
     @Environment(\.modelContext) private var modelContext
+
+    @State private var audioItems = [AudioItem]()
+    @State private var title: String = "Untitled Playlist"
+    @State private var editManager = EditModeManager()
 
     private var isInPlaylists: Bool {
         playlists.contains(playlist)
@@ -20,7 +25,7 @@ struct PlaylistView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(playlist.audioItems) { audio in
+                ForEach($audioItems) { $audio in
 
                     HStack {
                         Text(audio.title)
@@ -30,11 +35,19 @@ struct PlaylistView: View {
                     }
                 }
                 .onMove { from, to in
-                    playlist.audioItems.move(fromOffsets: from, toOffset: to)
+                    audioItems.move(fromOffsets: from, toOffset: to)
+                    if isInPlaylists {
+                        playlist.audioItems = audioItems
+                    }
                 }
                 .onDelete { indices in
                     for index in indices {
-                        playlist.audioItems.remove(at: index)
+                        audioItems.remove(at: index)
+                    }
+                    /// setting property of playlist will cause swift data saving the playlist
+                    /// So if the playlist is not a saved playlist( temp playlist), don't perform the change on the playlist
+                    if isInPlaylists {
+                        playlist.audioItems = audioItems
                     }
                 }
             }
@@ -49,20 +62,48 @@ struct PlaylistView: View {
                         Image(systemName: isInPlaylists ? "star.fill" : "star")
                     }
                 }
+                ToolbarItem(placement: .principal) {
+                    if editManager.isEditing {
+                        TextField("title", text: $title)
+                            .font(.title2)
+                            .multilineTextAlignment(.center)
+                            .onSubmit {
+                                /// if a user changes the title of the temp list
+                                /// typically means the user want to save the list
+                                /// so save the temp list
+                                savePlaylist()
+                                editManager.done()
+                            }
+
+                    } else {
+                        Text(playlist.title)
+                            .font(.title2)
+                            .onTapGesture {
+                                editManager.edit()
+                            }
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     EditButton()
                 }
             }
-            .onChange(of: playlist.audioItems) { oldValue, newValue in
-                print("old ids \(oldValue)")
-                print("new ids \(newValue)")
+            .printChange(of: playlist.audioItems)
+
+            .onAppear {
+                audioItems = playlist.audioItems
+                title = playlist.title
             }
         }
+    }
+    
+    func savePlaylist() {
+        playlist.title = title
+        playlist.audioItems = audioItems
     }
 }
 
 #Preview {
-    
-    PlaylistView(playlist: Playlist(title: "example playlist"))
+    let playlist = Playlist(title: "example playlist", audioItems: AudioItem.sampleData.suffix(2))
+    PlaylistView(playlist: playlist)
         .modelContainer(ModelContainer.previewContainer)
 }
