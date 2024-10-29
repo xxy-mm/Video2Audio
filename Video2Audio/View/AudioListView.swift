@@ -43,87 +43,95 @@ struct AudioListView: View {
     let editButtonDoneText = "Done"
 
     var body: some View {
-        NavigationStack {
-            List {
-                if !audios.isEmpty {
-                    ForEach(audios) { audio in
-                        HStack {
-                            if editMode == .active {
-                                SelectRadio(collection: $selectedAudios, current: audio)
-                            }
-                            playButton(audio)
-                            Spacer()
-
-                            Image(systemName: playingIndicatorIcon)
-                                .if(!isPlaying(audio: audio)) { view in
-                                    view.hidden()
-                                }
-                            audio.icon
+        List {
+            if !audios.isEmpty {
+                ForEach(audios) { audio in
+                    HStack {
+                        if editMode == .active {
+                            SelectRadio(collection: $selectedAudios, current: audio)
                         }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                deleteAudio(audio)
-                            } label: {
-                                Image(systemName: trashIcon)
+                        playButton(audio)
+                            
+
+                        Spacer()
+
+                        Image(systemName: playingIndicatorIcon)
+                            .if(!isPlaying(audio: audio)) { view in
+                                view.hidden()
                             }
 
-                            Button {
-                                audiosToExport.insert(audio)
-                                showExporter = true
-                            } label: {
-                                Image(systemName: exportIcon)
-                            }
-                            .tint(.blue)
+                        audio.icon
+                    }
+                    .listRowBackground(Color.bg)
+
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            deleteAudio(audio)
+                        } label: {
+                            Image(systemName: trashIcon)
                         }
-                    }
-                }
-            }
-            .listStyle(.plain)
-            .safeAreaInset(edge: .bottom, content: {
-                VStack {
-                    AudioPlayerView(playlist: playList, currentPlayingAudio: $currentPlayingAudio)
-                        .if(showPlayerView && editMode == .inactive)
-                }
-                .padding(.bottom)
 
-            })
-            .safeAreaInset(edge: .bottom, content: {
-                BatchActionBar {
-                    audiosToExport = Set(selectedAudios)
-                    resetSelection()
-                } onPlay: {
-                    updatePlayList(selectedAudios)
-                    resetSelection()
-                } onDelete: {
-                    for audio in selectedAudios {
-                        deleteAudio(audio)
+                        Button {
+                            audiosToExport.insert(audio)
+                            showExporter = true
+                        } label: {
+                            Image(systemName: exportIcon)
+                        }
+                        .tint(.blue)
                     }
-                    resetSelection()
-                }.if(editMode == .active)
-            })
-            .toolbar {
-                if editMode == .active {
-                    selectAllButton()
-                }
-                editButton()
-                importButton()
-            }
-            .navigationTitle(title)
-            .fileImporter(isPresented: $showVideoPicker, allowedContentTypes: [.mpeg, .mpeg2Video, .mpeg4Movie, .quickTimeMovie], allowsMultipleSelection: true, onCompletion: convertVideos)
-            .fileExporter(isPresented: $showExporter, documents: audiosToExport.map { AudioFile(url: $0.url) }, contentType: .mpeg4Audio) { result in
-                do {
-                    _ = try result.get()
-                    audiosToExport.removeAll()
-                } catch {
-                    // TODO: record error
-                    showAlert = true
-                    message = error.localizedDescription
+                    
                 }
             }
-            .alert("export status", isPresented: $showAlert) {
-            } message: {
-                Text(message)
+        }
+//        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(alignment: .topLeading, content: {
+            AppBackground()
+        })
+        .safeAreaInset(edge: .bottom, content: {
+            VStack {
+                AudioPlayerView(playlist: playList, currentPlayingAudio: $currentPlayingAudio)
+                    .if(showPlayerView && editMode == .inactive)
             }
+            .padding(.bottom)
+
+        })
+        .safeAreaInset(edge: .bottom, content: {
+            BatchActionBar {
+                audiosToExport = Set(selectedAudios)
+                resetSelection()
+            } onPlay: {
+                updatePlayList(selectedAudios)
+                resetSelection()
+            } onDelete: {
+                for audio in selectedAudios {
+                    deleteAudio(audio)
+                }
+                resetSelection()
+            }.if(editMode == .active)
+        })
+        .toolbar {
+            if editMode == .active {
+                selectAllButton()
+            }
+            editButton()
+            importButton()
+        }
+        .navigationTitle(title)
+        .fileImporter(isPresented: $showVideoPicker, allowedContentTypes: [.mpeg, .mpeg2Video, .mpeg4Movie, .quickTimeMovie], allowsMultipleSelection: true, onCompletion: convertVideos)
+        .fileExporter(isPresented: $showExporter, documents: audiosToExport.map { AudioFile(url: $0.url) }, contentType: .mpeg4Audio) { result in
+            do {
+                _ = try result.get()
+                audiosToExport.removeAll()
+            } catch {
+                // TODO: record error
+                showAlert = true
+                message = error.localizedDescription
+            }
+        }
+        .alert("export status", isPresented: $showAlert) {
+        } message: {
+            Text(message)
         }
     }
 
@@ -143,6 +151,7 @@ struct AudioListView: View {
             }
         } label: {
             Text(audio.title)
+                .foregroundStyle(.text)
                 .lineLimit(2)
                 .truncationMode(.tail)
         }
@@ -246,7 +255,6 @@ struct AudioListView: View {
 }
 
 #Preview {
-    
     AudioListView()
         .modelContainer(ModelContainer.previewContainer)
 }

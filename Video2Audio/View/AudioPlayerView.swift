@@ -24,22 +24,23 @@ struct AudioPlayerView: View {
 
     var body: some View {
         HStack {
-            VStack {
-                Text("Now Playing: \(title)")
-                    .font(.headline)
-                    .padding()
+            
 
                 HStack(spacing: 30) {
-                    Button(action: {
-                        audioPlayer.changeLoop()
-                    }) {
-                        loopImage()
-                    }
+                    Text("Now Playing: \(title)")
+                        .font(.headline)
+                        .foregroundStyle(Color.text)
+                        .padding()
+//                    Button(action: {
+//                        audioPlayer.changeLoop()
+//                    }) {
+//                        loopImage()
+//                    }
 
                     Button(action: {
                         audioPlayer.isPlaying ? audioPlayer.pause() : audioPlayer.play()
                     }) {
-                        Image(systemName: audioPlayer.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
                             .resizable()
                             .frame(width: 30, height: 30)
                     }
@@ -50,21 +51,22 @@ struct AudioPlayerView: View {
                             .resizable()
                             .frame(width: 30, height: 30)
                     }
-                    Button {
-                        showPlaylist = true
-                    } label: {
-                        Image(systemName: "list.bullet")
-                            .resizable()
-                            .frame(width: 30, height: 30)
-                    }
+//                    Button {
+//                        showPlaylist = true
+//                    } label: {
+//                        Image(systemName: "list.bullet")
+//                            .resizable()
+//                            .frame(width: 30, height: 30)
+//                    }
                 }
-            }
+                
+            
 
             .frame(maxWidth: .infinity)
-            .padding(.bottom)
-            .background()
+            
+            .background(Color.bg)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .shadow(color: .gray, radius: 3)
+            .shadow(color: .gray, radius: 8, x: 5, y: 0)
             .sheet(isPresented: $showPlaylist, content: {
                 if let playlist {
                     PlaylistView(playlist: playlist)
@@ -112,7 +114,7 @@ struct AudioPlayerView: View {
         return Image(systemName: imageName)
             .resizable()
             .disabled(audioPlayer.loopingStatus == .none)
-            .frame(width: 40, height: 40)
+            .frame(width: 30, height: 30)
     }
 }
 

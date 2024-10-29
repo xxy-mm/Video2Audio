@@ -57,9 +57,9 @@
 			isa = PBXGroup;
 			children = (
 				C28191542CBFA7B4001944B3 /* Video2Audio.xctestplan */,
+				C23E11442CAFE40800D94113 /* Products */,
 				C23E11452CAFE40800D94113 /* Video2Audio */,
 				C281914A2CBF6F2C001944B3 /* Video2AudioTests */,
-				C23E11442CAFE40800D94113 /* Products */,
 			);
 			sourceTree = "<group>";
 		};

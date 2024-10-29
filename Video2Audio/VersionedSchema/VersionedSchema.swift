@@ -70,6 +70,7 @@ enum VersionedSchemaV2: VersionedSchema {
         var url: URL
         var title: String
         var isFavorite: Bool?
+        var task: ConvertionTask?
         init(videoURL: URL, audioURL: URL, status: VideoConvertStatus = .processing, isFavorite: Bool = false, id: UUID = UUID()) {
             sourceURL = videoURL
             url = audioURL
@@ -84,7 +85,7 @@ enum VersionedSchemaV2: VersionedSchema {
     class ConvertionTask {
         var id: UUID
         var createAt: Date = Date.now
-        @Relationship(deleteRule: .noAction)
+        @Relationship(deleteRule: .cascade, inverse: \AudioItem.task)
         var audioItems: [AudioItem] = []
         var title: String
 

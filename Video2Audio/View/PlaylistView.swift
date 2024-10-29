@@ -51,8 +51,8 @@ struct PlaylistView: View {
                     }
                 }
             }
-            .listStyle(.plain)
-            .padding()
+            .scrollContentBackground(.hidden)
+            .background{ AppBackground() }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {

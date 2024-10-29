@@ -9,36 +9,64 @@ import SwiftData
 import SwiftUI
 struct TaskListView: View {
     @Query private var tasks: [ConvertionTask]
+    
+    @Environment(\.modelContext) private var context
+    @Environment(\.editMode) private var editMode
+    
+    @State private var showDeleteAlert = false
+    @State private var taskIndicesToDelete: IndexSet = []
+    
     var body: some View {
-        List {
-            ForEach(tasks) { task in
-                NavigationLink {
-                    AudioItemListView(task: task)
-                } label: {
-                    HStack {
-                        Text(task.title)
-                        Spacer()
+            List {
+                ForEach(tasks) { task in
+                    NavigationLink {
+                        AudioItemListView(audioItems: task.audioItems, title: task.title)
+                    } label: {
+                        HStack {
+                            Text(task.title)
+                            Spacer()
+                        }
                     }
+                    .foregroundStyle(.text)
+                    .listRowBackground(Color.bg)
+                }
+                .onDelete { indexSet in
+                    showDeleteAlert = true
+                    taskIndicesToDelete = indexSet
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(content: {
+                AppBackground()
+            })
+            .alert("delete task", isPresented: $showDeleteAlert, actions: {
+                Button("Confirm") {
+                    deleteTask(indexSet: taskIndicesToDelete)
+                    taskIndicesToDelete = []
+                }
+                Button("Cancel") {
+                    taskIndicesToDelete = []
+                }
+                
+            }, message: {
+                Text("Deleting a task will also delete all audios of the task, are you sure?")
+            })
+            .toolbar {
+                EditButton()
+            }
+            .navigationTitle("Tasks")
+        
+    }
+    
+    
+    func deleteTask(indexSet: IndexSet) {
+        for index in indexSet {
+            context.delete(tasks[index])
         }
-        .listStyle(.plain)
-        .navigationTitle("Tasks")
     }
 }
 
-struct AudioItemListView: View {
-    @Bindable var task: ConvertionTask
-    var body: some View {
-        List {
-            ForEach(task.audioItems){ audioItem in
-                AudioItemRow(audioItem: audioItem, showStatus: true)
-            }
-        }
-        .listStyle(.plain)
-        .navigationTitle(task.title)
-    }
-}
+
 
 #Preview {
     let modelContaienr = ModelContainer.previewContainer

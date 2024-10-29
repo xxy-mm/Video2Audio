@@ -16,42 +16,44 @@ struct PlaylistsView: View {
     @State private var currentPlaylist: Playlist?
 
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach(playlists) { playlist in
-                    Button {
-                        currentPlaylist = playlist
-                    } label: {
-                        Label {
-                            Text(playlist.title)
-                        } icon: {
-                            Image(systemName: "list.bullet")
-                        }
+        List {
+            ForEach(playlists) { playlist in
+                Button {
+                    currentPlaylist = playlist
+                } label: {
+                    Label {
+                        Text(playlist.title)
+                    } icon: {
+                        Image(systemName: "list.bullet")
                     }
                 }
-                .onDelete { indices in
-                    for index in indices {
-                        let playlistToDelete = playlists[index]
-                        if playlistToDelete == currentPlaylist {
-                            currentPlaylist = nil
-                        }
-                        modelContext.delete(playlists[index])
+                .foregroundStyle(Color.text)
+                .listRowBackground(Color.bg)
+            }
+            .onDelete { indices in
+                for index in indices {
+                    let playlistToDelete = playlists[index]
+                    if playlistToDelete == currentPlaylist {
+                        currentPlaylist = nil
                     }
+                    modelContext.delete(playlists[index])
                 }
             }
-            .listStyle(.plain)
-            .safeAreaInset(edge: .bottom, content: {
-                if let currentPlaylist {
-                    AudioPlayerView(playlist: currentPlaylist, currentPlayingAudio: $currentPlayingAudio)
-                }
-            })
-            .navigationTitle("Playlists")
         }
+        .scrollContentBackground(.hidden)
+        .background {
+            AppBackground()
+        }
+        .safeAreaInset(edge: .bottom, content: {
+            if let currentPlaylist {
+                AudioPlayerView(playlist: currentPlaylist, currentPlayingAudio: $currentPlayingAudio)
+            }
+        })
+        .navigationTitle("Playlists")
     }
 }
 
 #Preview {
-    
     PlaylistsView()
         .modelContainer(ModelContainer.previewContainer)
 }
