@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Foundation
+import SwiftUI
 
 @Observable
 class AudioPlayer: NSObject {
@@ -36,12 +37,15 @@ class AudioPlayer: NSObject {
 
     convenience init(audioItems: [AudioItem], playAt index: Int = 0) {
         self.init()
-        setAudios(audioItems, index)
+        setAudios(audioItems, playAt: index)
     }
 }
 
 extension AudioPlayer {
     var currentAudio: AudioItem? {
+        guard audioItems.count > 0 else {
+            return nil
+        }
         guard currentIndex >= 0 && currentIndex < audioItems.count else {
             return nil
         }
@@ -100,14 +104,40 @@ extension AudioPlayer {
         player = nil
     }
 
-    func setAudios(_ audioItems: [AudioItem], _ currentIndex: Int = 0, keepIndex: Bool = false) {
-        state.setAudios(audioItems, currentIndex, keepIndex: keepIndex)
+    func setAudios(_ audioItems: [AudioItem], playAt index: Int = 0) {
+        state.setAudios(audioItems, index)
     }
 
     func incrementIndex() throws {
         resetPlayer()
         currentIndex = (currentIndex + 1) % audioItems.count
         try loadAudioFile(at: currentIndex)
+    }
+
+    func decrementIndex() throws {
+        guard currentIndex - 1 >= 0 else { return }
+        currentIndex = (currentIndex - 1) % audioItems.count
+        try loadAudioFile(at: currentIndex)
+    }
+}
+
+// MARK: - SwiftUI
+
+extension AudioPlayer {
+    var loopingIcon: some View {
+        var imageName: String
+        switch loopingStatus {
+        case .list:
+            imageName = "repeat"
+        case .single:
+            imageName = "repeat.1"
+        case .none:
+            imageName = "repeat"
+        }
+        return Image(systemName: imageName)
+            .resizable()
+            .disabled(loopingStatus == .none)
+            .frame(width: 30, height: 30)
     }
 }
 

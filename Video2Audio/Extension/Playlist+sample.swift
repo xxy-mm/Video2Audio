@@ -7,9 +7,11 @@
 
 import Foundation
 
+
 extension Playlist {
     static let sampleData = [
         Playlist(title: "example playlist1", audioItems: [], id: UUID(uuidString: "B0611DD6-E4F1-47F4-AE40-CDE92A7EA523")!),
         Playlist(title: "example playlist2", audioItems: [], id: UUID(uuidString: "B0611ED6-E4F1-47F4-AE40-CDE92A7EA522")!),
     ]
 }
+

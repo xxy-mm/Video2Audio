@@ -16,94 +16,136 @@ struct PlaylistView: View {
 
     @State private var audioItems = [AudioItem]()
     @State private var title: String = "Untitled Playlist"
-    @State private var editManager = EditModeManager()
-
+    @State private var showEditor = false
+    @State private var description = "faklsdjfkasdfjaskdjfkasldfjsdafs"
     private var isInPlaylists: Bool {
         playlists.contains(playlist)
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach($audioItems) { $audio in
+        List {
+            ForEach($audioItems) { $audio in
 
+                HStack {
+                    Text(audio.title)
+                    Spacer()
                     HStack {
-                        Text(audio.title)
-                        Spacer()
-                        //                    Image(systemName: "waveform")
-                        //                        .if(isPlaying(audio: audio))
+                        Image(systemName: "waveform")
+                        Image(systemName: "line.3.horizontal")
                     }
+                    .padding(.leading)
                 }
-                .onMove { from, to in
-                    audioItems.move(fromOffsets: from, toOffset: to)
-                    if isInPlaylists {
-                        playlist.audioItems = audioItems
-                    }
-                }
-                .onDelete { indices in
-                    for index in indices {
-                        audioItems.remove(at: index)
-                    }
-                    /// setting property of playlist will cause swift data saving the playlist
-                    /// So if the playlist is not a saved playlist( temp playlist), don't perform the change on the playlist
-                    if isInPlaylists {
-                        playlist.audioItems = audioItems
-                    }
+                .listRowBackground(Color.bg.opacity(0.2).blur(radius: 10))
+            }
+            .onMove { from, to in
+                audioItems.move(fromOffsets: from, toOffset: to)
+                if isInPlaylists {
+                    playlist.audios = audioItems
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background{ AppBackground() }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        isInPlaylists ? modelContext.delete(playlist) : modelContext.insert(playlist)
-
-                    } label: {
-                        Image(systemName: isInPlaylists ? "star.fill" : "star")
-                    }
+            .onDelete { indices in
+                for index in indices {
+                    audioItems.remove(at: index)
                 }
-                ToolbarItem(placement: .principal) {
-                    if editManager.isEditing {
-                        TextField("title", text: $title)
-                            .font(.title2)
-                            .multilineTextAlignment(.center)
-                            .onSubmit {
-                                /// if a user changes the title of the temp list
-                                /// typically means the user want to save the list
-                                /// so save the temp list
-                                savePlaylist()
-                                editManager.done()
-                            }
-
-                    } else {
-                        Text(playlist.title)
-                            .font(.title2)
-                            .onTapGesture {
-                                editManager.edit()
-                            }
-                    }
+                /// setting property of playlist will cause swift data saving the playlist
+                /// So if the playlist is not a saved playlist( temp playlist), don't perform the change on the playlist
+                if isInPlaylists {
+                    playlist.audios = audioItems
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    EditButton()
-                }
-            }
-            .printChange(of: playlist.audioItems)
-
-            .onAppear {
-                audioItems = playlist.audioItems
-                title = playlist.title
             }
         }
+        .listStyle(.plain)
+        .safeAreaInset(edge: .top, content: {
+            VStack {
+                Text(playlist.title)
+                    .multilineTextAlignment(.center)
+                    .font(.title)
+
+                HStack(spacing: 20) {
+                    Button {
+                        // TODO: play audio
+                    } label: {
+                        Label {
+                            Text("Play")
+                        } icon: {
+                            Image(systemName: "play.fill")
+                        }
+                        .frame(maxWidth: 500, minHeight: 30)
+                    }
+                    .layoutPriority(1)
+                    Button {
+                        // TODO: change looping mode
+                    } label: {
+                        Label {
+                            Text("Repeat")
+                        } icon: {
+                            Image(systemName: "repeat")
+                        }
+                        .frame(maxWidth: 500, minHeight: 30)
+                    }
+                    .layoutPriority(1)
+                }
+                .buttonStyle(.bordered)
+                .tint(.text)
+                .padding(.vertical, 4)
+                Text(playlist.desc)
+                    .font(.body)
+                    .foregroundStyle(.text.opacity(0.8))
+                    .padding(.vertical, 4)
+                    .if(playlist.desc != "")
+            }
+            .padding(.horizontal)
+        })
+        .scrollContentBackground(.hidden)
+        .background { AppBackground() }
+        .toolbar {
+            Button("Edit") {
+                showEditor = true
+            }
+        }
+        .sheet(isPresented: $showEditor, content: {
+            NavigationStack {
+                Form {
+                    Section("Title") {
+                        TextField("playlist title", text: $title)
+                    }
+                    Section("Description") {
+                        AutoHeightTextEditor(text: $description)
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            showEditor = false
+                        }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") {
+                            playlist.title = title
+                            playlist.desc = description
+                            showEditor = false
+                        }
+                    }
+                }
+            }
+        })
+        .onAppear {
+            audioItems = playlist.audios
+            title = playlist.title
+            description = playlist.desc
+        }
     }
-    
+
     func savePlaylist() {
         playlist.title = title
-        playlist.audioItems = audioItems
+        playlist.audios = audioItems
     }
 }
 
 #Preview {
     let playlist = Playlist(title: "example playlist", audioItems: AudioItem.sampleData.suffix(2))
-    PlaylistView(playlist: playlist)
-        .modelContainer(ModelContainer.previewContainer)
+    NavigationStack {
+        PlaylistView(playlist: playlist)
+            .modelContainer(ModelContainer.previewContainer)
+    }
 }

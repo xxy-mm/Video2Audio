@@ -8,6 +8,7 @@
 import SwiftData
 import SwiftUI
 
+/// this view is used in iphone
 enum GridLink: String, Identifiable, CaseIterable {
     case favorites, playlists, audios, tasks
 

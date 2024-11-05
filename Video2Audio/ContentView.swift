@@ -6,39 +6,33 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Query private var audioItems: [AudioItem]
+    @Query private var playlists: [Playlist]
+    @Query private var tasks: [ConvertionTask]
+    
     @State private var selection = 0
     @State private var tabBarHeight: CGFloat = 0
-    
-    @State private var currentPlayingAudio: AudioItem?
+    @State private var audioPlayer = AudioPlayer()
+
+  
+    @State private var showExpandedPlaylist = false
     var body: some View {
         ZStack {
-            HomeGridView()
-
-            .background( // Measure the TabBar height using GeometryReader
-                GeometryReader { geometry in
-                    Color.red
-                        .onAppear {
-                            // Calculate tab bar height based on safe area insets
-                            tabBarHeight = geometry.safeAreaInsets.bottom
-                        }
-                        .onChange(of: geometry.size) { _, _ in
-                            // Recalculate when size or layout changes (e.g., on rotation)
-                            tabBarHeight = geometry.safeAreaInsets.bottom
-                        }
+            HomeListView()
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear
+                        .frame(height: 50)
                 }
-            )
-             
-            VStack {
-                Spacer()
-
-                AudioPlayerView(currentPlayingAudio: $currentPlayingAudio)
-            }
+            
         }
+        .environment(audioPlayer)
     }
 }
 
 #Preview {
     ContentView()
+        .environment(AudioPlayer(audioItems: AudioItem.sampleData))
 }

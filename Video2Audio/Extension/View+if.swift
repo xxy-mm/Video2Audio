@@ -28,8 +28,8 @@ extension View {
     
     @ViewBuilder func printChange<V: Equatable>(of value: V) -> some View {
         self.onChange(of: value) { oldValue, newValue in
-            print("old ids \(oldValue)")
-            print("new ids \(newValue)")
+            print("old value: \(oldValue)")
+            print("new value: \(newValue)")
         }
     }
     

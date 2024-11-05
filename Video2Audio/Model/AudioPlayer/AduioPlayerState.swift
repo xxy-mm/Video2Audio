@@ -25,7 +25,7 @@ protocol AudioPlayerState {
     ///     - audioItems:  the new list of audios to play
     ///     - playAtIndex: the index of the audio in the list to play
     ///     - keepIndex: whether to keep the audio player's currentIndex after new audioItems are set
-    func setAudios(_ audioItems: [AudioItem], _ playAtIndex: Int, keepIndex: Bool)
+    func setAudios(_ audioItems: [AudioItem], _ playAtIndex: Int)
 }
 
 extension AudioPlayerState {
@@ -46,17 +46,14 @@ extension AudioPlayerState {
     /// 2. set the audio items
     /// 3. update the currentIndex
     /// 4. update the state, the state after this action can be one of [noplaylist, hasplaylist, haserror]
-    func setAudios(_ audioItems: [AudioItem], _ playAtIndex: Int = 0, keepIndex: Bool = false) {
+    func setAudios(_ audioItems: [AudioItem], _ playAtIndex: Int = 0) {
         audioPlayer.resetPlayer()
         audioPlayer.audioItems = audioItems
 
-        if !keepIndex {
-            if playAtIndex >= 0 && playAtIndex < audioItems.count {
-                audioPlayer.currentIndex = playAtIndex
-            } else {
-                print("currentIndex exceeds the length of audioItems, the given index: \(playAtIndex), the count of audioItems: \(audioItems.count)")
-                audioPlayer.currentIndex = 0
-            }
+        if playAtIndex >= 0 && playAtIndex < audioItems.count {
+            audioPlayer.currentIndex = playAtIndex
+        } else {
+            audioPlayer.currentIndex = 0
         }
 
         if audioItems.count > 0 {
@@ -68,8 +65,6 @@ extension AudioPlayerState {
         } else {
             audioPlayer.state = audioPlayer.noPlaylistState
         }
-
-        
     }
 
     func playAt(_ index: Int) {

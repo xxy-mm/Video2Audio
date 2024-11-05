@@ -12,9 +12,11 @@ struct AppBackground: View {
         ZStack {
             Image("app-bg")
                 .resizable()
-                .scaledToFill()
-                .frame(width: UIScreen.main.bounds.width, height: .infinity)
+                .aspectRatio(contentMode: .fill)
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.size.height)
+                .clipped()
                 .ignoresSafeArea()
+                .blur(radius: 10)
             Color.blue.opacity(0.3)
                 .ignoresSafeArea()
         }

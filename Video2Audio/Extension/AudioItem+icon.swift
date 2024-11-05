@@ -36,7 +36,8 @@ extension AudioItem {
         ]
         var items: [AudioItem] = []
         for (i, char) in "abcde".enumerated() {
-            let item = AudioItem(videoURL: URL(string: "/ads/\(char).mp4")!, audioURL: URL(string: "/a/b/\(char).mp4")!, id: UUID(uuidString: ids[i])!)
+            let title = String(repeating: char, count: 50)
+            let item = AudioItem(videoURL: URL(string: "/ads/\(title).mp4")!, audioURL: URL(string: "/a/b/\(title).mp4")!, id: UUID(uuidString: ids[i])!)
             if i < 1 {
                 item.status = .processing
             } else if i < 3 {

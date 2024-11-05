@@ -16,7 +16,7 @@ extension ModelContainer {
     static func container(for versionedSchema: VersionedSchema.Type = SchemaLatest.self) throws -> ModelContainer {
         let schema = Schema(versionedSchema: versionedSchema)
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
-        let container = try ModelContainer(for: schema, migrationPlan: MigrationPlanV1toV2.self, configurations: config)
+        let container = try ModelContainer(for: schema, configurations: config)
 
         return container
     }
@@ -26,7 +26,7 @@ extension ModelContainer {
     static let previewContainer:  ModelContainer =  {
         let schema = Schema(versionedSchema: SchemaLatest.self)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: schema, migrationPlan: MigrationPlanV1toV2.self, configurations: config)
+        let container = try! ModelContainer(for: schema, configurations: config)
 
         Task { @MainActor in
             let context = container.mainContext
@@ -59,7 +59,7 @@ extension ModelContainer {
             // container
             let container = try ModelContainer(
                 for: schema,
-                migrationPlan: MigrationPlanV1toV2.self,
+//                migrationPlan: MigrationPlanV1toV2.self,
                 configurations: [config]
             )
             logger.info("setup -> \(String(describing: container))")
